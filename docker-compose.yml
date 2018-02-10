@@ -2,7 +2,7 @@ version: "2"
 
 services:
     php:
-        image: kiwilightweight/php53-fpm-jessie
+        image: kiwilightweight/php-fpm53
         ports:
             - "127.0.0.1:9081:9000"
         volumes:
