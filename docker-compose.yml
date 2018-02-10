@@ -2,17 +2,16 @@ version: "2"
 
 services:
     php:
-        image: kiwilightweight/apache22-php53-jessie
+        image: kiwilightweight/php53-fpm-jessie
         ports:
-            - "127.0.0.1:9080:9000"
+            - "127.0.0.1:9081:9000"
         volumes:
             - ./data:/var/www/html
         restart: unless-stopped
-
-    cron:
-        image: kiwilightweight/cron-jessie
-        links:
-            - php
-        volumes:
-            - ./data:/var/www/html
-        restart: unless-stopped
+#    cron:
+#        image: kiwilightweight/cron-jessie
+#        links:
+#            - php
+#        volumes:
+#            - ./data:/var/www/html
+#        restart: unless-stopped
