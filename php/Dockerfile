@@ -1,12 +1,14 @@
 FROM debian:jessie
 # modified from config by MAINTAINER https://github.com/helderco/
-MAINTAINER Dave Lane https://davelane.nz
+MAINTAINER Dave Lane <dave@davelane.nz> (@lightweight) https://davelane.nz
 
 # persistent / runtime deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-utils \
     ca-certificates \
+    cron \
     curl \
+    git \
     librecode0 \
     libmariadb-client-lgpl-dev \
 #      libmariadb-client-lgpl-dev-compat \
@@ -17,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-0 \
     libxml2 \
     mariadb-client \
+    unzip zip \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*
 
@@ -106,25 +109,24 @@ RUN buildDeps=" \
 
 COPY docker-php-* /usr/local/bin/
 
-WORKDIR /var/www/html
+#WORKDIR /var/www/html
 
-RUN set -ex \
-    && cd /usr/local/etc \
-    && \
-    if [ -d php-fpm.d ]; then \
-        # for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
-        sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
-        cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
+RUN set -ex && cd /usr/local/etc && \
+    if [ -d php-fpm.d ] ; then \
+        # for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf" \
+        sed 's!=NONE!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
+        touch php-fpm.d/www.conf; \
     else \
-        # PHP 5.x don't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency
+        # PHP 5.x don't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency \
         mkdir php-fpm.d; \
-        cp php-fpm.conf.default php-fpm.d/www.conf; \
+        touch php-fpm.d/www.conf; \
         { \
           echo '[global]'; \
           echo 'include=etc/php-fpm.d/*.conf'; \
         } | tee php-fpm.conf; \
-    fi \
-    && { \
+    fi
+
+RUN set -ex && cd /usr/local/etc && { \
         echo '[global]'; \
         echo 'error_log = /proc/self/fd/2'; \
         echo; \
@@ -134,20 +136,39 @@ RUN set -ex \
         echo; \
         echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
         echo 'catch_workers_output = yes'; \
-    } | tee php-fpm.d/docker.conf \
-    && { \
+    } | tee php-fpm.d/docker.conf;
+
+RUN set -ex && cd /usr/local/etc && { \
+        echo '[www]'; \
+        echo 'user = www-data'; \
+        echo 'group = www-data'; \
+        echo '; this does not appear to be supported by php 5.3.x'; \
+        echo ';clear_env = no'; \
+        echo 'security.limit_extensions = .php'; \
+        echo 'pm = ondemand'; \
+        echo 'pm.max_children = 20'; \
+        echo 'pm.start_servers = 2'; \
+        echo 'pm.min_spare_servers = 1'; \
+        echo 'pm.max_spare_servers = 3'; \
+    } | tee php-fpm.d/www.conf;
+
+RUN set -ex && cd /usr/local/etc && { \
         echo '[global]'; \
         echo 'daemonize = no'; \
         echo; \
         echo '[www]'; \
         echo 'listen = 9000'; \
-    } | tee php-fpm.d/zz-docker.conf
+    } | tee php-fpm.d/zz-docker.conf;
 
-# fix some weird corruption in this file
-RUN sed -i -e "" /usr/local/etc/php-fpm.d/www.conf
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-#RUN composer require drush/drush
+
+WORKDIR /var/www/html
 
 EXPOSE 9000
+
+# Copy init scripts and custom .htaccess
+COPY docker-entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
 CMD ["php-fpm"]
