@@ -64,8 +64,8 @@ else
     echo >&2 "not configuring MSMTP - set SMTP_HOST and related environment values to enable."
 fi
 
-echo >&2 'Trying to read /usr/local/etc/php-fpm.d/www.conf'
-cat /usr/local/etc/php-fpm.d/www.conf
+#echo >&2 'Trying to read /usr/local/etc/php-fpm.d/www.conf'
+#cat /usr/local/etc/php-fpm.d/www.conf
 
 # run composer to set up dependencies if not already there...
 cd /var/www/html

@@ -1,0 +1,51 @@
+# replace variables in [] below
+version: "3"
+services:
+    app:
+        image: kiwilightweight/php-fpm53
+        volumes:
+            - [path_to_Drupal_root]:/var/www/html
+        environment:
+            - SMTP_HOST=[smtp_server]
+            - SMTP_PORT=[smtp_port] # usually 587 or 465, or 25 for insecure access
+            - SMTP_REPLYTO_EMAIL=[outgoing_address]
+            - SMTP_AUTH_USER=[smtp_auth_user]
+            - SMTP_AUTH_PASSWORD=[smtp_auth_password]
+        restart: unless-stopped
+        networks:
+            default:
+                aliases:
+                    - [drupal_site_url]
+    cron:
+        image: kiwilightweight/php-fpm53-cron
+        links:
+            - app
+        volumes:
+            - [path_to_Drupal_root]:/var/www/html
+        environment:
+            - SMTP_HOST=[smtp_server]
+            - SMTP_PORT=[smtp_port] # usually 587 or 465, or 25 for insecure access
+            - SMTP_REPLYTO_EMAIL=[outgoing_address]
+            - SMTP_AUTH_USER=[smtp_auth_user]
+            - SMTP_AUTH_PASSWORD=[smtp_auth_password]
+        restart: unless-stopped
+        networks:
+            default:
+                aliases:
+                    - cron.[drupal_site_url]
+    nginx:
+        image: oeru/nginx-jessie
+        links:
+            - app
+        ports:
+            - "127.0.0.1:[free_port]:80"
+        volumes:
+            - ./nginx/conf.d:/etc/nginx/conf.d
+            - ./nginx/includes:/etc/nginx/includes
+            - ./nginx/cache:/var/cache/nginx
+            - [path_to_Drupal_root]:/var/www/html
+        restart: unless-stopped
+        networks:
+            default:
+                aliases:
+                    - nginx.[drupal_site_url]
