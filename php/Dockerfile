@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cron \
     curl \
     git \
+    less \
     librecode0 \
     libmariadb-client-lgpl-dev \
 #      libmariadb-client-lgpl-dev-compat \
@@ -19,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-0 \
     libxml2 \
     mariadb-client \
+    vim \
     unzip zip \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*
@@ -144,7 +146,7 @@ RUN set -ex && cd /usr/local/etc && { \
         echo 'group = www-data'; \
         echo '; this does not appear to be supported by php 5.3.x'; \
         echo ';clear_env = no'; \
-        echo 'security.limit_extensions = .php'; \
+        #echo 'security.limit_extensions = .php'; \
         echo 'pm = ondemand'; \
         echo 'pm.max_children = 20'; \
         echo 'pm.start_servers = 2'; \
@@ -162,6 +164,8 @@ RUN set -ex && cd /usr/local/etc && { \
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN apt update && apt install -y sudo
 
 WORKDIR /var/www/html
 

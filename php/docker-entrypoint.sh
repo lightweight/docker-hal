@@ -79,7 +79,7 @@ if ! [ -e vendor/autoload.php ]; then
         mv composer.phar /usr/local/bin/composer
     fi
     cd /var/www/html
-    composer require drush/drush
+    sudo -u www-data composer require drush/drush
 else
     echo >&2 "vendor dependencies already in place."
 fi
