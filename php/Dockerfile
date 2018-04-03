@@ -8,7 +8,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     cron \
     curl \
+    default-jre \
     git \
+    imagemagick \
     less \
     librecode0 \
     libmariadb-client-lgpl-dev \
@@ -20,7 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-0 \
     libxml2 \
     mariadb-client \
+    net-tools \
     vim \
+    wkhtmltopdf \
     unzip zip \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*
@@ -95,10 +99,11 @@ RUN buildDeps=" \
     --with-fpm-user=www-data \
     --with-fpm-group=www-data \
     --disable-cgi \
+    --enable-mbstring \
     --enable-mysqlnd \
     --with-mysql \
     --with-curl \
-    --with-gd \
+    --with-gd --with-jpeg-dir=/usr/lib64 \
     --with-openssl=/usr/local/ssl \
     --with-readline \
     --with-recode \
