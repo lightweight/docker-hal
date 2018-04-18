@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libmysqlclient18 \
     libpng12-0 \
     libsqlite3-0 \
+    libtika-java \
     libxml2 \
     mariadb-client \
     net-tools \
