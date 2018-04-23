@@ -168,6 +168,31 @@ RUN set -ex && cd /usr/local/etc && { \
         echo 'listen = 9000'; \
     } | tee php-fpm.d/zz-docker.conf;
 
+# address app-specific config requirements
+RUN set -ex \
+    && { \
+        echo 'log_errors = on'; \
+        echo 'display_errors = off'; \
+        echo 'always_populate_raw_post_data = -1'; \
+        echo 'date.timezone = "Pacific/Auckland"'; \
+        echo 'cgi.fix_pathinfo = 0'; \
+        echo 'sendmail_path = /usr/bin/msmtp -t'; \
+        echo 'upload_max_filesize = 100M'; \
+        echo 'post_max_size = 150M'; \
+        echo 'memory_limit = 250M'; \
+        echo 'max_execution_time = 1800'; \
+        echo '[opcache]'; \
+        echo 'opcache.enable = 1'; \
+        echo 'opcache.memory_consumption = 128'; \
+        echo 'opcache.max_accelerated_files = 8000'; \
+        echo 'opcache.revalidate_freq = 60'; \
+        echo 'opcache.use_cwd = 1'; \
+        echo 'opcache.validate_timestamps = 1'; \
+        echo 'opcache.save_comments = 1'; \
+        echo 'opcache.enable_file_override = 0'; \
+    } | tee /usr/local/etc/php/conf.d/php.ini;
+
+
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 

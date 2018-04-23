@@ -64,24 +64,44 @@ else
     echo >&2 "not configuring MSMTP - set SMTP_HOST and related environment values to enable."
 fi
 
-#echo >&2 'Trying to read /usr/local/etc/php-fpm.d/www.conf'
-#cat /usr/local/etc/php-fpm.d/www.conf
 
 # run composer to set up dependencies if not already there...
-cd /var/www/html
-if ! [ -e vendor/autoload.php ]; then
-    echo >&2 "installing dependencies with Composer"
-    if ! [ -e /usr/local/bin/composer ]; then
-        echo >&2 "first getting Composer"
-        # Get Composer
-        curl -S https://getcomposer.org/installer | php
-        chmod a+x composer.phar
-        mv composer.phar /usr/local/bin/composer
+
+if ! [ -f /usr/local/bin/composer ]; then
+    echo >&2 "first getting Composer"
+    # Get Composer
+    curl -S https://getcomposer.org/installer | php
+    chmod a+x composer.phar
+    mv composer.phar /usr/local/bin/composer
+fi
+
+# check if composer's already running on this system of containers... 
+SEMAPH=composer-running
+
+if ! [ -f $SEMAPH ] ; then 
+        # create the semaphore file with the date in it... 
+            date > $SEMAPH
+
+    if ! [ -f vendor/autoload.php ]; then
+        echo >&2 "installing dependencies with Composer"
+        if ! [ -e .git/hooks ]; then
+            echo >&2 "creating a .git/hooks dir to avoid errors"
+            mkdir -p .git/hooks
+        fi
+    else
+        echo >&2 "vendor dependencies already in place."
     fi
+    echo >&2 "installing/updating vendor dependencies..."
+    mkdir /var/www/.composer
+    chown www-data:www-data /var/www/.composer
     cd /var/www/html
     sudo -u www-data composer require drush/drush
+    chown -R www-data:www-data .
+    
+    #remove semaphore
+    rm $SEMAPH
 else
-    echo >&2 "vendor dependencies already in place."
+    echo >&2 "Looks like another composer is already running. If not, please remove $SEMAPH"
 fi
 
 
