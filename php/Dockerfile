@@ -117,6 +117,22 @@ RUN buildDeps=" \
 
 COPY docker-php-* /usr/local/bin/
 
+# install the Java/Tika stuff
+RUN apt-get update && apt-get install -y openjdk-7-jre-headless openjdk-7-jdk
+ENV MAVENVER 3.5.3
+RUN curl -fsSL "http://apache.org/dist/maven/maven-3/$MAVENVER/binaries/apache-maven-$MAVENVER-bin.tar.gz" | tar -xz -C /tmp 
+ENV TIKAVER 1.1
+RUN cd /tmp && curl -OL "http://archive.apache.org/dist/tika/apache-tika-$TIKAVER-src.zip" 
+RUN ls -l /tmp
+RUN cd /tmp && unzip /tmp/apache-tika-$TIKAVER-src.zip 
+RUN cd /tmp/apache-tika-$TIKAVER && /tmp/apache-maven-$MAVENVER/bin/mvn install
+RUN cp -rf /tmp/apache-tika-$TIKAVER/tika-app/target/tika-app-$TIKAVER.jar /usr/local/bin/tika-app-$TIKAVER.jar
+RUN ln -sf /usr/local/bin/tika-app-$TIKAVER.jar /usr/local/bin/tika-app.jar
+RUN rm -rf /tmp/apache-tika-$TIKAVER-src.zip /tmp/apache-tika-$TIKAVER  /tmp/apache-maven-$MAVENVER 
+#RUN apt-get remove openjdk-7-jdk
+
+
+
 #WORKDIR /var/www/html
 
 RUN set -ex && cd /usr/local/etc && \
@@ -181,22 +197,12 @@ RUN set -ex \
         echo 'post_max_size = 150M'; \
         echo 'memory_limit = 250M'; \
         echo 'max_execution_time = 1800'; \
-        echo '[opcache]'; \
-        echo 'opcache.enable = 1'; \
-        echo 'opcache.memory_consumption = 128'; \
-        echo 'opcache.max_accelerated_files = 8000'; \
-        echo 'opcache.revalidate_freq = 60'; \
-        echo 'opcache.use_cwd = 1'; \
-        echo 'opcache.validate_timestamps = 1'; \
-        echo 'opcache.save_comments = 1'; \
-        echo 'opcache.enable_file_override = 0'; \
     } | tee /usr/local/etc/php/conf.d/php.ini;
-
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN apt update && apt install -y sudo
+RUN apt-get update && apt-get install -y sudo
 
 WORKDIR /var/www/html
 
